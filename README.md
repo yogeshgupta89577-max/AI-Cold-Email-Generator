@@ -18,7 +18,7 @@ Built with **Llama 3.3 + LangChain + Streamlit**
 
 ## 🖥️ Demo
 
-> *(Add your app screenshot here)*
+> *(App screenshot here)*
 
 ![App Screenshot](Screenshot.png)
 
