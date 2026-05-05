@@ -20,6 +20,8 @@ class Portfolio:
                 )
 
     def query_links(self, skills):
-        # returns the links based on skill similarity
+        if not skills:
+            return []
+        # Ensure skills is a list of strings
         results = self.collection.query(query_texts=skills, n_results=2)
         return results.get('metadatas', [])
