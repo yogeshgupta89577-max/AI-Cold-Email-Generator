@@ -78,14 +78,6 @@ def create_streamlit_app(llm, portfolio, clean_text):
         border: 1px solid #4f46e5;
     }
 
-    /* Card */
-    .custom-card {
-        background-color: rgba(255,255,255,0.08);
-        padding: 30px;
-        border-radius: 20px;
-        box-shadow: 0px 4px 20px rgba(0,0,0,0.3);
-        backdrop-filter: blur(10px);
-    }
 
     </style>
     """, unsafe_allow_html=True)
@@ -106,9 +98,10 @@ def create_streamlit_app(llm, portfolio, clean_text):
 
    
     url_input = st.text_input(
-    "",
-    placeholder="🔗 Paste Job URL"
-)
+    "Job URL",
+    placeholder="🔗 Paste Job URL",
+    label_visibility="collapsed"
+    )
 
     submit_button = st.button("🚀 Generate Email")
 
