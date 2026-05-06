@@ -15,8 +15,11 @@ Built with **Llama 3.3 + LangChain + Streamlit**
 - ⬇️ Download generated emails
 
 ---
+## 🚀 Live Demo
 
-## 🖥️ Demo
+🔗 Live App: https://ai-cold-email-generator-oo4i.onrender.com
+
+---
 
 > *(App screenshot here)*
 
