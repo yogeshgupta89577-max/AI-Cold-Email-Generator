@@ -16,7 +16,7 @@ class Chain:
             temperature=0,
             groq_api_key=os.getenv("GROQ_API_KEY"),
             model_name="llama-3.3-70b-versatile",
-            max_tokens=1024
+            max_tokens=512
         )
 
     def extract_jobs(self, cleaned_text):

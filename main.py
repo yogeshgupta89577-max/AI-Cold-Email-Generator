@@ -126,7 +126,10 @@ def create_streamlit_app(llm, portfolio, clean_text):
 
                 data = clean_text(
                     loader.load().pop().page_content
-                )
+)
+
+                # Limit text size
+                data = data[:4000]
 
                 portfolio.load_portfolio()
 
