@@ -1,111 +1,181 @@
 import streamlit as st
 from langchain_community.document_loaders import WebBaseLoader
+
 from chains import Chain
 from portfolio import Portfolio
 from utils import clean_text
 
-def create_streamlit_app(llm, portfolio, clean_text_func):
-    st.set_page_config(page_title="AI Cold Email Generator", page_icon="📧", layout="wide")
 
-    # ---------- UI ENHANCEMENTS ----------
+def create_streamlit_app(llm, portfolio, clean_text):
+
+    st.set_page_config(
+        page_title="AI Cold Email Generator",
+        page_icon="📧",
+        layout="wide"
+    )
+
+    # Custom CSS
     st.markdown("""
-        <style>
-        .stApp { background-color: #f4f4f9; }
-        .header-container { text-align: center; padding: 2rem 0; }
-        .main-header { 
-            font-size: 3.5rem !important; 
-            font-weight: 800; 
-            background: linear-gradient(-45deg, #4F46E5, #9333EA, #2563EB, #06B6D4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .stButton>button {
-            border-radius: 10px;
-            background: linear-gradient(90deg, #4F46E5, #7C3AED);
-            color: white;
-            font-weight: bold;
-        }
-        </style>
+    <style>
+
+    /* Main Background */
+    .stApp {
+        background: linear-gradient(to right, #141e30, #243b55);
+        color: white;
+    }
+
+    /* Title */
+    .main-title {
+        text-align: center;
+        font-size: 55px;
+        font-weight: bold;
+        color: #ffffff;
+        margin-top: 20px;
+    }
+
+    .sub-title {
+        text-align: center;
+        font-size: 20px;
+        color: #d1d5db;
+        margin-bottom: 40px;
+    }
+
+    /* Input Box */
+    .stTextInput > div > div > input {
+        background-color: #1f2937;
+        color: white;
+        border-radius: 12px;
+        border: 2px solid #4f46e5;
+        padding: 12px;
+        font-size: 16px;
+    }
+    ::placeholder {
+    color: white !important;
+    opacity: 0.7 !important;
+    }
+
+    /* Button */
+    .stButton > button {
+        width: 100%;
+        background: linear-gradient(to right, #4f46e5, #9333ea);
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 12px;
+        padding: 12px;
+        border: none;
+        transition: 0.3s;
+    }
+
+    .stButton > button:hover {
+        transform: scale(1.02);
+        background: linear-gradient(to right, #4338ca, #7e22ce);
+    }
+
+    /* Output Box */
+    .stCodeBlock {
+        border-radius: 15px;
+        border: 1px solid #4f46e5;
+    }
+
+    /* Card */
+    .custom-card {
+        background-color: rgba(255,255,255,0.08);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="header-container"><h1 class="main-header">📧 AI Cold Email Generator</h1></div>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align:center;">Craft professional emails in seconds using Llama 3.3</p>', unsafe_allow_html=True)
+    # Header
+    st.markdown(
+        """
+        <div class="main-title">
+            📧 AI Cold Email Generator
+        </div>
 
-    _, col2, _ = st.columns([1, 4, 1])
+        <div class="sub-title">
+            Generate Professional AI-Powered Job Application Emails Instantly
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with col2:
-        url_input = st.text_input("🔗 Job URL or Job Description:", placeholder="Paste link or text here...")
-        submit_button = st.button("Generate Cold Email ✨")
+   
+    url_input = st.text_input(
+    "",
+    placeholder="🔗 Paste Job URL"
+)
 
-        if submit_button:
-            if not url_input:
-                st.error("Please provide a URL or job text.")
-                return
+    submit_button = st.button("🚀 Generate Email")
 
-            with st.spinner("Processing..."):
-                try:
-                    # STEP 1: Load & Scraping (Fix for empty data)
-                    if url_input.startswith("http"):
-                        # User-Agent header add kiya hai taaki sites block na karein
-                        loader = WebBaseLoader([url_input])
-                        loader.requests_kwargs = {'headers': {'User-Agent': 'Mozilla/5.0'}}
-                        data = loader.load()
-                        
-                        if not data or not data[0].page_content:
-                            st.error("Could not read website content. Please paste the job text directly.")
-                            return
-                        raw_data = data[0].page_content
-                    else:
-                        raw_data = url_input
+    if submit_button:
 
-                    # STEP 2: Clean Text
-                    cleaned_data = clean_text_func(raw_data)
+        if not url_input.strip():
+            st.warning("Please enter a valid URL")
+            return
 
-                    # STEP 3: Load Portfolio
-                    portfolio.load_portfolio()
+        with st.spinner("Generating professional email..."):
 
-                    # STEP 4: Extract Jobs (Ensuring it's a list)
-                    jobs = llm.extract_jobs(cleaned_data)
+            try:
 
-                    # Error Check: Agar 'int' ya non-list return hua ho
-                    if not isinstance(jobs, list) or len(jobs) == 0:
-                        st.warning("No job details could be parsed. Check the URL or paste text.")
-                        return
+                loader = WebBaseLoader([url_input])
 
-                    job = jobs[0] 
+                data = clean_text(
+                    loader.load().pop().page_content
+                )
 
-                    # STEP 5: Generate Email (Fix for skills data type)
+                portfolio.load_portfolio()
+
+                jobs = llm.extract_jobs(data)
+
+                for job in jobs:
+
                     skills = job.get('skills', [])
-                    
-                    # Agar skills string format mein hain (e.g. "Python, Java"), list mein convert karein
+
+                    # Safe skill conversion
                     if isinstance(skills, str):
-                        skills = [s.strip() for s in skills.split(',')]
-                    
-                    # Safety check for ChromaDB query
-                    links = []
-                    if skills and isinstance(skills, list):
+                        skills = [skills]
+
+                    elif isinstance(skills, int):
+                        skills = [str(skills)]
+
+                    elif isinstance(skills, list):
+                        skills = [str(skill) for skill in skills]
+
+                    else:
+                        skills = []
+
+                    # Prevent empty query issue
+                    if skills:
                         links = portfolio.query_links(skills)
+                    else:
+                        links = []
 
                     email = llm.write_mail(job, links)
 
-                    # STEP 6: Display Result
-                    st.markdown("---")
-                    st.subheader(f"🎯 Targeted Role: {job.get('role', 'N/A')}")
-                    
-                    st.text_area(label="Your Generated Email:", value=email, height=400)
+                    st.success("✅ Email Generated Successfully")
 
-                    st.download_button(
-                        "📥 Download Email",
-                        data=email,
-                        file_name="cold_email.txt",
-                        mime="text/plain"
-                    )
+                    st.code(email, language='markdown')
 
-                except Exception as e:
-                    st.error(f"Error detail: {e}")
-                    st.info("Tip: Try pasting the Job Description text directly instead of the URL.")
+            except Exception as e:
+
+                st.error(f"❌ Error: {e}")
+
+ 
+
 
 if __name__ == "__main__":
+
     chain = Chain()
+
     portfolio = Portfolio()
-    create_streamlit_app(chain, portfolio, clean_text)
+
+    create_streamlit_app(
+        chain,
+        portfolio,
+        clean_text
+    )
